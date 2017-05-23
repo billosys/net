@@ -18,7 +18,6 @@
             [net.http              :as http]
             [net.core.concurrent   :as nc]
             [clojure.core.async    :as a]
-            [clojure.spec          :as s]
             [net.core.async        :refer [put!]]
             [clojure.tools.logging :refer [debug info warn error]])
   (:import io.netty.channel.ChannelHandlerContext
@@ -399,7 +398,7 @@
    the options map in the 1-arity version.
 
    Ring handler is a function of one argument, a correctly formed HTTP
-   request of the following form (see `::request` spec for full form):
+   request of the following form:
 
    ```
    {:request-method <method>
@@ -418,8 +417,7 @@
    When the response is a channel, a single value will be consumed from
    it: the response map.
 
-   The response map should be of the form (see `::response` spec for
-   full form):
+   The response map should be of the form:
 
    ```
    {:status         <http-status>
@@ -467,24 +465,3 @@
          (bs/shutdown-fn channel boss-group))))))
 
 (def executor? #(instance? java.util.concurrent.ExecutorService %))
-
-(s/def ::loop-thread-count pos-int?)
-(s/def ::disable-epoll boolean?)
-(s/def ::host string?)
-(s/def ::port (s/int-in 1 65536))
-(s/def ::chunk-size pos-int?)
-(s/def ::input-channel-buffer pos-int?)
-(s/def ::so-backlog pos-int?)
-(s/def ::aggregate-length pos-int?)
-(s/def ::response-write-executor executor?)
-
-(s/def ::options (s/keys :opt-un [::loop-thread-count
-                                  ::disable-epoll
-                                  ::host
-                                  ::post
-                                  ::chunk-size
-                                  ::inbuf
-                                  ::so-backlog
-                                  ::aggregate-length
-                                  ::response-write-executor
-                                  ::ring-handler]))

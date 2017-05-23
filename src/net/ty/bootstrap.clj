@@ -1,8 +1,7 @@
 (ns net.ty.bootstrap
   "A clojure facade to build netty bootstraps.
    In netty, bootstraps are helpers to get channels."
-  (:require [clojure.spec   :as s]
-            [net.ty.channel :as chan])
+  (:require [net.ty.channel :as chan])
   (:import java.net.InetAddress
            java.net.NetworkInterface
            java.net.SocketAddress
@@ -66,8 +65,6 @@
 (defn ^ServerBootstrap server-bootstrap
   "Build a server bootstrap from a configuration map"
   [config]
-  (when-not (s/valid? ::server-bootstrap-schema config)
-    (throw (IllegalArgumentException. "invalid server bootstrap configuration")))
   (let [bs (ServerBootstrap.)
         group ^EventLoopGroup (:child-group config)]
     (if-let [c ^EventLoopGroup (:child-group config)]
@@ -104,9 +101,6 @@
 (defn ^AbstractBootstrap bootstrap
   "Build a client bootstrap from a configuration map"
   [config]
-  (when-not (s/valid? ::bootstrap-schema config)
-    (println (s/explain-out (s/explain-data ::bootstrap-schema config)))
-    (throw (IllegalArgumentException. "invalid bootstrap configuration")))
   (let [bs (Bootstrap.)]
     (.group bs (or (:group config) (nio-event-loop-group)))
     (.channel bs (or (:channel config) nio-socket-channel))
@@ -169,93 +163,3 @@
   [^ServerBootstrap bootstrap
    ^ChannelHandler handler]
   (.childHandler bootstrap handler))
-
-;; Specs
-;; =====
-
-(s/def ::allocator (partial instance? ByteBufAllocator))
-(s/def ::allow-half-closure boolean?)
-(s/def ::auto-read boolean?)
-(s/def ::connect-timeout-millis pos-int?)
-(s/def ::ip-multicast-addr (partial instance? InetAddress))
-(s/def ::ip-multicast-if (partial instance? NetworkInterface))
-(s/def ::ip-multicast-loop-disabled boolean?)
-(s/def ::ip-multicast-ttl pos-int?)
-(s/def ::ip-tos pos-int?)
-(s/def ::max-messages-per-read pos-int?)
-(s/def ::message-size-estimator (partial instance? MessageSizeEstimator))
-(s/def ::rcvbuf-allocator (partial instance? RecvByteBufAllocator))
-(s/def ::so-backlog pos-int?)
-(s/def ::so-broadcast boolean?)
-(s/def ::so-keepalive boolean?)
-(s/def ::so-linger pos-int?)
-(s/def ::so-rcvbuf pos-int?)
-(s/def ::so-reuseaddr boolean?)
-(s/def ::so-sndbuf pos-int?)
-(s/def ::so-timeout pos-int?)
-(s/def ::tcp-nodelay boolean?)
-(s/def ::write-buffer-high-water-mark pos-int?)
-(s/def ::write-buffer-low-water-mark pos-int?)
-(s/def ::write-spin-count pos-int?)
-
-(s/def ::channel-option-schema
-  (s/keys :opt-un [::allocator
-                   ::allow-half-closure
-                   ::auto-read
-                   ::connect-timeout-millis
-                   ::ip-multicast-addr
-                   ::ip-multicast-if
-                   ::ip-multicast-loop-disabled
-                   ::ip-multicast-ttl
-                   ::ip-tos
-                   ::max-messages-per-read
-                   ::message-size-estimator
-                   ::rcvbuf-allocator
-                   ::so-backlog
-                   ::so-broadcast
-                   ::so-keepalive
-                   ::so-linger
-                   ::so-rcvbuf
-                   ::so-reuseaddr
-                   ::so-sndbuf
-                   ::so-timeout
-                   ::tcp-nodelay
-                   ::write-buffer-high-water-mark
-                   ::write-buffer-low-water-mark
-                   ::write-spin-count]))
-
-(s/def ::group (partial instance? EventLoopGroup))
-(s/def ::handler any?)
-(s/def ::options ::channel-option-schema)
-(s/def ::child-options ::channel-option-schema)
-(s/def ::child-attrs (s/map-of keyword? any?))
-(s/def ::child-group (partial instance? EventLoopGroup))
-(s/def ::channel any?)
-(s/def ::remote-address (s/cat ::host string? ::port pos-int?))
-(s/def ::server-bootstrap (partial instance? ServerBootstrap))
-(s/def ::bootstrap (partial instance? Bootstrap))
-
-(s/def ::server-bootstrap-schema
-  (s/keys :req-un [::handler]
-          :opt-un [::options ::child-options ::child-attrs ::group
-                   ::child-group ::channel]))
-
-(s/def ::bootstrap-schema
-  (s/keys :req-un [::handler]
-          :opt-un [::group ::options ::attrs ::channel ::remote-address]))
-
-(s/fdef ->channel-option
-        :args (s/cat :k keyword?)
-        :ret  (partial instance? ChannelOption))
-
-(s/fdef nio-event-loop-group
-        :args (s/cat)
-        :ret  (partial instance? NioEventLoopGroup))
-
-(s/fdef server-bootstrap
-        :args (s/cat :config ::server-bootstrap-schema)
-        :ret  ::server-bootstrap)
-
-(s/fdef bootstrap
-        :args (s/cat :config ::server-bootstrap-schema)
-        :ret  ::bootstrap)

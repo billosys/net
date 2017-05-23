@@ -1,6 +1,5 @@
 (ns net.http
   "Functions common to HTTP clients and servers"
-  (:require [clojure.spec :as s])
   (:import io.netty.channel.ChannelHandlerContext
            io.netty.channel.ChannelHandlerAdapter
            io.netty.channel.ChannelInboundHandlerAdapter
@@ -111,40 +110,3 @@
     EpollSocketChannel NioSocketChannel))
 
 (def logging-re #"(?i)^(debug|info|warn)$")
-
-(s/def ::loop-thread-count pos-int?)
-(s/def ::disable-epoll boolean?)
-(s/def ::logging (s/or :string (s/and string? #(re-matches logging-re %))
-                       :keyword #{:debug :info :warn}))
-
-(s/def ::boss-group-opts (s/keys :opt-un [::loop-thread-count ::disable-epoll]))
-
-(s/def ::log-opts (s/keys :opt-un [::logging]))
-
-(s/fdef epoll? :args (s/cat) :ret boolean?)
-
-(s/fdef bb->string
-        :args (s/cat :bb #(instance? ByteBuf %))
-        :ret  string?)
-
-(s/fdef headers
-        :args (s/cat :headers #(instance? HttpHeaders %))
-        :ret  (s/map-of keyword? string?))
-
-(s/fdef make-boss-group
-        :args (s/cat :opts ::boss-group-opts)
-        :ret #(instance? EventLoopGroup %))
-
-(s/fdef set-log-handler!
-        :args (s/cat :bootstrap #(instance? AbstractBootstrap %)
-                     :log-opts ::log-opts)
-        :ret #(instance? AbstractBootstrap %))
-
-(s/fdef set-optimal-server-channel!
-        :args (s/cat :bootstrap #(instance? AbstractBootstrap %)
-                     :disable-epoll? boolean?)
-        :ret #(instance? AbstractBootstrap %))
-
-(s/fdef optimal-client-channel
-        :args (s/cat :disable-epoll? boolean?)
-        :ret  #(instance? SocketChannel %))

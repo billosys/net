@@ -3,7 +3,6 @@
   (:require [net.codec.b64      :as b64]
             [net.ssl            :as ssl]
             [net.http           :as http]
-            [clojure.spec       :as s]
             [clojure.core.async :as async])
   (:import io.netty.bootstrap.Bootstrap
            io.netty.buffer.ByteBuf
@@ -281,99 +280,3 @@
   "Predicate to determine whether a request is chunked?"
   [request]
   (instance? clojure.core.async.impl.protocols.Channel (:body request)))
-
-;; Specs
-;; =====
-
-;; The URI is the only required part of a request map, if it
-;; is a string, it will be parsed to a URI.
-
-(s/def ::uri (s/or :uri #(instance? java.net.URI %) :string string?))
-
-;; We parse request methods liberally, they may be
-;; a string, keyword or a Netty HttpMethod instance.
-;; A nil request method implies GET.
-
-(def method-re #"(?i)^(connect|delete|get|head|options|patch|post|put|trace)$")
-
-(s/def ::keyword-method #{:connect :delete :get :head :options
-                          :patch :post :put :trace})
-(s/def ::string-method  #(re-matches method-re %))
-(s/def ::request-method (s/or :keyword ::keyword-method
-                              :string  ::string-method
-                              :method  #(instance? HttpMethod %)))
-
-;; Version specifications are also parsed loosely.
-;; nil versions mean HTTP 1.1, strings, keywords and HttpVersion instances
-;; are also allowed.
-
-(def version-re #"(?i)^http/1.[01]$")
-
-(s/def ::version (s/or :keyword #{:http-1-1 :http-1-0}
-                       :string  (s/and string? #(re-matches version-re %))
-                       :version #(instance? HttpVersion %)))
-
-;; Query args are maps of keyword or string to anything.
-;; When values are sequential, arguments are looped over. Any other
-;; value is coerced to a string.
-
-(s/def ::query (s/map-of (s/or :keyword keyword? :string string?) any?))
-
-;; When auth is present, it should be a map of `:user` and `:password`.
-
-(s/def ::user string?)
-(s/def ::password string?)
-(s/def ::auth (s/keys :req-un [::user ::password]))
-
-;; Bring everything together in our request map
-
-(s/def ::request (s/keys
-                  :req-un [::uri]
-                  :opt-un [::request-method ::body ::version ::query ::auth]))
-
-;;
-(s/def ::build-client-opts
-  (s/keys :opt-un [::ssl ::http/loop-thread-count
-                   ::http/disable-epoll]))
-
-(s/def ::client
-  (s/keys :req-un [::channel ::group ::ssl-ctx]))
-
-(s/fdef data->request
-        :args (s/cat :request ::request)
-        :ret #(instance? HttpRequest %))
-
-(s/fdef string->version
-        :args (s/cat :version string? :e #(instance? Exception %))
-        :ret  #(instance? HttpVersion %))
-
-(s/fdef data->version
-        :args (s/cat :version (s/nilable ::version))
-        :ret  #(instance? HttpVersion %))
-
-(s/fdef data->method
-        :args (s/cat :method (s/nilable ::request-method))
-        :ret  #(instance? HttpMethod %))
-
-(s/fdef data->uri
-        :args (s/cat :uri #(instance? URI %) :query (s/nilable ::query))
-        :ret  #(instance? URI %))
-
-(s/fdef data->headers
-        :args (s/cat :headers #(instance? HttpHeaders %)
-                     :input (s/nilable ::headers)
-                     :host string?)
-        :ret  #(instance? HttpHeaders %))
-
-(s/fdef auth->headers
-        :args (s/cat :headers #(instance? HttpHeaders %)
-                     :auth   (s/nilable ::auth))
-        :ret #(instance? HttpHeaders %))
-
-(s/fdef build-client
-        :args (s/cat :opts (s/nilable ::build-client-opts))
-        :ret  ::client)
-
-(s/fdef chunked?
-        :args (s/cat :request ::request)
-        :ret  boolean?)
