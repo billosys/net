@@ -28,8 +28,11 @@ Net now has full [API Documentation](http://pyr.github.io/net) and
 
 ## Installation
 
+Note that this repo is a hack for projects that wish to use
+Clojure 1.8: all the spec stuff has been removed.
+
 ```clojure
-    [[spootnik/net "0.3.3-beta9"]]
+[systems.billo/net "net-0.3.3-beta12-Clojure1.8"]
 ```
 
 ## Changelog

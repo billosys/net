@@ -1,11 +1,11 @@
-(defproject spootnik/net "0.3.3-beta12"
+(defproject systems.billo/net "0.3.3-beta12-Clojure1.8"
   :description "the clojure netty companion"
-  :url "https://github.com/pyr/net"
+  :url "https://github.com/billosys/net"
   :license {:name "MIT License"
-            :url  "https://github.com/pyr/net/tree/master/LICENSE"}
+            :url  "https://github.com/billosys/net/tree/master/LICENSE"}
   :plugins [[lein-codox   "0.10.2"]
             [lein-ancient "0.6.10"]]
-  :codox {:source-uri  "https://github.com/pyr/net/blob/{version}/{filepath}#L{line}"
+  :codox {:source-uri  "https://github.com/billosys/net/blob/{version}/{filepath}#L{line}"
           :output-path "docs"
           :namespaces  [#"^net"]
           :doc-files   ["examples/guides/intro.md"
@@ -21,7 +21,7 @@
                                     [org.slf4j/slf4j-log4j12    "1.7.22"]
                                     [org.clojure/test.check     "0.9.0"]
                                     [com.stuartsierra/component "0.3.2"]]}}
-  :dependencies [[org.clojure/clojure       "1.9.0-alpha15"]
+  :dependencies [[org.clojure/clojure       "1.8.0"]
                  [org.clojure/core.async    "0.3.442"]
                  [org.clojure/tools.logging "0.3.1"]
                  [io.netty/netty-all        "4.1.9.Final"]]
